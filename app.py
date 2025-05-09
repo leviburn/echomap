@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, flash, redirect, url_for
 import os
+import tempfile
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 from transcriber import transcribe_audio
@@ -16,14 +17,14 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit uploads to 16MB
 app.config['ALLOWED_EXTENSIONS'] = {'mp3', 'wav', 'ogg', 'm4a'}
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
 
-# Configuration for cloud platforms
-# Ensure uploads directory is correctly set for cloud platforms
-UPLOAD_PATH = os.getenv('RENDER_DISK_MOUNT_PATH', 'uploads')
-if os.path.exists(UPLOAD_PATH):
-    app.config['UPLOAD_FOLDER'] = UPLOAD_PATH
+# For Render free tier (no persistent disk), use temp directory
+if os.getenv('RENDER', 'False').lower() == 'true':
+    app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+    app.config['USE_TEMP_FILES'] = True
 else:
-    # Fallback to local directory
+    # Local development uses local uploads directory
     app.config['UPLOAD_FOLDER'] = 'uploads'
+    app.config['USE_TEMP_FILES'] = False
 
 # Configure logging
 logging.basicConfig(
@@ -43,8 +44,9 @@ def index():
     flowchart = None
     error = None
 
-    # Ensure upload directory exists
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    # Ensure upload directory exists (for local development)
+    if not app.config['USE_TEMP_FILES']:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     if request.method == 'POST':
         logger.debug("Received POST request")
@@ -67,11 +69,21 @@ def index():
             return render_template('index.html', error="Invalid file type. Please upload MP3, WAV, OGG, or M4A files.")
 
         try:
-            # Save file securely
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            logger.debug(f"Saved file to: {filepath}")
+            # Save file securely (using different methods based on environment)
+            if app.config['USE_TEMP_FILES']:
+                # Create a temporary file with the right extension
+                suffix = '.' + file.filename.rsplit('.', 1)[1].lower()
+                # We need to create a named temporary file that doesn't get deleted when closed
+                temp_file = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+                file.save(temp_file.name)
+                filepath = temp_file.name
+                logger.debug(f"Saved file to temporary location: {filepath}")
+            else:
+                # Standard file saving for local development
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                logger.debug(f"Saved file to: {filepath}")
 
             # Transcribe audio
             try:
@@ -96,6 +108,14 @@ def index():
             except Exception as e:
                 logger.error(f"Error transcribing audio: {str(e)}")
                 error = f"Error transcribing audio: {str(e)}"
+            
+            # Clean up temporary file if using temp files
+            if app.config['USE_TEMP_FILES'] and os.path.exists(filepath):
+                try:
+                    os.unlink(filepath)
+                    logger.debug(f"Deleted temporary file: {filepath}")
+                except Exception as e:
+                    logger.warning(f"Could not delete temporary file: {str(e)}")
         
         except RequestEntityTooLarge:
             logger.error("File too large")

@@ -10,11 +10,9 @@ services:
         value: production
       - key: FLASK_DEBUG
         value: "false"
+      - key: RENDER
+        value: "true"
       - key: OPENAI_API_KEY
         sync: false
       - key: SECRET_KEY
         generateValue: true
-    disk:
-      name: uploads
-      mountPath: /uploads
-      sizeGB: 1
