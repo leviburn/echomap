@@ -13,13 +13,21 @@ load_dotenv()
 # Configure application
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit uploads to 16MB
-app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'mp3', 'wav', 'ogg', 'm4a'}
 app.secret_key = os.getenv("SECRET_KEY", os.urandom(24))
 
+# Configuration for cloud platforms
+# Ensure uploads directory is correctly set for cloud platforms
+UPLOAD_PATH = os.getenv('RENDER_DISK_MOUNT_PATH', 'uploads')
+if os.path.exists(UPLOAD_PATH):
+    app.config['UPLOAD_FOLDER'] = UPLOAD_PATH
+else:
+    # Fallback to local directory
+    app.config['UPLOAD_FOLDER'] = 'uploads'
+
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.DEBUG if os.getenv('FLASK_DEBUG', 'False').lower() == 'true' else logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -117,4 +125,11 @@ if __name__ == '__main__':
         print("ERROR: OPENAI_API_KEY not set. Please set it in your .env file.")
         exit(1)
     
-    app.run(debug=True)
+    # Get port from environment variable (for cloud platforms)
+    port = int(os.getenv('PORT', 5000))
+    
+    # Use environment variable to control debug mode
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    
+    # Run the application
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)
