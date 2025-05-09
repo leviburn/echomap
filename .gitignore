@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.py[cod]
+*.class
+venv/
+uploads/
+*.mp3
+*.wav
+*.m4a
+*.ogg
+secret_key_temp.txt

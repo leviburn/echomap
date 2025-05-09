@@ -6,7 +6,13 @@
   <title>EchoMap – Upload IVR Recording</title>
   <script type="module">
     import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-    mermaid.initialize({ startOnLoad: true });
+    mermaid.initialize({ 
+      startOnLoad: true,
+      theme: 'neutral',
+      flowchart: {
+        curve: 'basis'
+      }
+    });
   </script>
   <style>
     body {
@@ -14,18 +20,62 @@
         Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
       background-color: #f9fafb;
       padding: 2rem;
+      margin: 0;
+      color: #333;
     }
     .container {
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
       background: white;
       padding: 2rem;
       border-radius: 0.5rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      box-shadow: 0 0 15px rgba(0,0,0,0.08);
+    }
+    header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 1rem;
+    }
+    .logo {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #2563eb;
+      margin-right: auto;
     }
     h1 {
       font-size: 2rem;
       font-weight: bold;
+      margin-bottom: 1rem;
+      color: #1e40af;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      color: #1e40af;
+    }
+    .upload-form {
+      background-color: #f3f4f6;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .file-input-wrapper {
+      display: flex;
+      margin-bottom: 1rem;
+    }
+    .file-input {
+      flex: 1;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 0.375rem;
+      background: white;
+    }
+    .file-info {
+      font-size: 0.875rem;
+      color: #6b7280;
       margin-bottom: 1rem;
     }
     button {
@@ -36,27 +86,97 @@
       font-size: 1rem;
       border-radius: 0.375rem;
       cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    button:disabled {
+      background-color: #93c5fd;
+      cursor: not-allowed;
     }
     .transcript, .flowchart {
       margin-top: 2rem;
+      background: #f9fafb;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #e5e7eb;
     }
     .mermaid {
       margin-top: 1rem;
-      background: #f3f4f6;
+      background: #fff;
       padding: 1rem;
       border-radius: 0.375rem;
+      border: 1px solid #e5e7eb;
+      overflow-x: auto;
+    }
+    .error-message {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      padding: 1rem;
+      border-radius: 0.375rem;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid #ef4444;
+    }
+    .loading {
+      display: none;
+      margin: 1rem 0;
+      text-align: center;
+    }
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .footer {
+      margin-top: 3rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: #6b7280;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 1rem;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>EchoMap – Upload IVR Recording</h1>
+    <header>
+      <div class="logo">EchoMap</div>
+    </header>
 
-    <form method="POST" enctype="multipart/form-data">
-      <input type="file" name="file" required />
-      <br /><br />
-      <button type="submit">Upload & Transcribe</button>
-    </form>
+    <h1>Upload IVR Recording</h1>
+    <p>Upload an audio recording of an IVR system to generate a transcript and visual flowchart.</p>
+
+    {% if error %}
+    <div class="error-message">
+      {{ error }}
+    </div>
+    {% endif %}
+
+    <div class="upload-form">
+      <form id="uploadForm" method="POST" enctype="multipart/form-data">
+        <div class="file-input-wrapper">
+          <input type="file" name="file" id="fileInput" class="file-input" accept=".mp3,.wav,.ogg,.m4a" required />
+        </div>
+        <div class="file-info">
+          Supported formats: MP3, WAV, OGG, M4A (Max size: 16MB)
+        </div>
+        <button type="submit" id="submitBtn">Upload & Transcribe</button>
+      </form>
+
+      <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <p>Processing your audio file... This may take a minute.</p>
+      </div>
+    </div>
 
     {% if transcript %}
     <div class="transcript">
@@ -73,6 +193,27 @@
       </div>
     </div>
     {% endif %}
+
+    <div class="footer">
+      &copy; 2025 EchoMap - IVR Transcription & Visualization Tool
+    </div>
   </div>
+
+  <script>
+    // Show loading indicator when form is submitted
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('loading').style.display = 'block';
+    });
+
+    // File size validation
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const fileSize = this.files[0]?.size / 1024 / 1024; // size in MB
+      if (fileSize > 16) {
+        alert('File is too large! Maximum size is 16MB.');
+        this.value = ''; // Clear the file input
+      }
+    });
+  </script>
 </body>
 </html>
