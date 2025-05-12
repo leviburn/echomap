@@ -3,217 +3,605 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EchoMap – Upload IVR Recording</title>
-  <script type="module">
-    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  <title>EchoMap – IVR Visualization Tool</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <!-- Import Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Import Mermaid.js -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <!-- Import call.js -->
+  <script src="/static/js/call.js"></script>
+  <script>
     mermaid.initialize({ 
       startOnLoad: true,
       theme: 'neutral',
       flowchart: {
-        curve: 'basis'
+        curve: 'basis',
+        padding: 15
       }
     });
   </script>
+  <!-- Custom styles -->
   <style>
+    :root {
+      --primary-blue: #2563eb;
+      --secondary-green: #059669;
+      --accent-orange: #ea580c;
+      --light-gray: #f3f4f6;
+    }
+    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-      background-color: #f9fafb;
+      font-family: 'Open Sans', sans-serif;
+      background-color: var(--light-gray);
+      color: #1e293b;
+    }
+    
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Roboto', sans-serif;
+      color: #111827;
+    }
+    
+    .text-gray-900, .text-gray-800, .text-gray-700, .text-gray-600, .text-gray-500, .text-gray-400 {
+      color: #1e293b !important;
+    }
+    
+    .text-primary-blue {
+      color: var(--primary-blue) !important;
+    }
+    
+    .drop-zone {
+      border: 2px dashed #e5e7eb;
+      border-radius: 0.5rem;
       padding: 2rem;
-      margin: 0;
-      color: #333;
-    }
-    .container {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 0 15px rgba(0,0,0,0.08);
-    }
-    header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 2rem;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 1rem;
-    }
-    .logo {
-      font-size: 1.25rem;
-      font-weight: bold;
-      color: #2563eb;
-      margin-right: auto;
-    }
-    h1 {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      color: #1e40af;
-    }
-    h2 {
-      font-size: 1.5rem;
-      margin-top: 2rem;
-      margin-bottom: 1rem;
-      color: #1e40af;
-    }
-    .upload-form {
-      background-color: #f3f4f6;
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      margin-bottom: 2rem;
-    }
-    .file-input-wrapper {
-      display: flex;
-      margin-bottom: 1rem;
-    }
-    .file-input {
-      flex: 1;
-      padding: 0.5rem;
-      border: 1px solid #d1d5db;
-      border-radius: 0.375rem;
-      background: white;
-    }
-    .file-info {
-      font-size: 0.875rem;
-      color: #6b7280;
-      margin-bottom: 1rem;
-    }
-    button {
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
-      border-radius: 0.375rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    button:hover {
-      background-color: #1d4ed8;
-    }
-    button:disabled {
-      background-color: #93c5fd;
-      cursor: not-allowed;
-    }
-    .transcript, .flowchart {
-      margin-top: 2rem;
-      background: #f9fafb;
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      border: 1px solid #e5e7eb;
-    }
-    .mermaid {
-      margin-top: 1rem;
-      background: #fff;
-      padding: 1rem;
-      border-radius: 0.375rem;
-      border: 1px solid #e5e7eb;
-      overflow-x: auto;
-    }
-    .error-message {
-      background-color: #fee2e2;
-      color: #b91c1c;
-      padding: 1rem;
-      border-radius: 0.375rem;
-      margin-bottom: 1.5rem;
-      border-left: 4px solid #ef4444;
-    }
-    .loading {
-      display: none;
-      margin: 1rem 0;
       text-align: center;
+      transition: all 0.3s ease;
+      background-color: white;
     }
+    
+    .drop-zone:hover {
+      border-color: var(--primary-blue);
+      background-color: #f8fafc;
+    }
+    
+    .drop-zone.dragover {
+      border-color: var(--primary-blue);
+      background-color: #eff6ff;
+    }
+    
     .loading-spinner {
       border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
+      border-top: 4px solid var(--primary-blue);
       border-radius: 50%;
       width: 30px;
       height: 30px;
       animation: spin 1s linear infinite;
       margin: 0 auto 1rem;
     }
+    
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    .footer {
-      margin-top: 3rem;
-      text-align: center;
+    
+    .logo-container {
+      position: relative;
+      width: 3rem;
+      height: 3rem;
+    }
+    
+    .logo-circle {
+      width: 100%;
+      height: 100%;
+      background-color: var(--primary-blue);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .logo-circle::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid var(--primary-blue);
+      animation: pulse 2s infinite;
+    }
+    
+    .logo-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      color: var(--primary-blue);
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.5);
+        opacity: 0;
+      }
+    }
+    
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      background-color: var(--primary-blue);
+      color: #fff;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .btn-primary:hover {
+      background-color: #1d4ed8;
+      color: #fff;
+    }
+    
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      background-color: #fff;
+      color: var(--primary-blue);
+      border: 1px solid #e5e7eb;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #f8fafc;
+      color: var(--primary-blue);
+    }
+    
+    .success-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      background-color: #ecfdf5;
+      color: var(--secondary-green);
+      border-radius: 9999px;
       font-size: 0.875rem;
-      color: #6b7280;
-      border-top: 1px solid #e5e7eb;
-      padding-top: 1rem;
+      font-weight: 500;
+    }
+    
+    .success-badge svg {
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.5rem;
+    }
+    
+    .flowchart-container {
+      cursor: pointer;
+      position: relative;
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 50;
+      overflow: auto;
+    }
+    
+    .modal-content {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: auto;
+      color: #1e293b !important;
+    }
+    
+    .modal-content svg {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    .feature-card {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-card h3, .feature-card p {
+      color: #1e293b;
+    }
+    
+    label, .drop-zone, .modal-header, .prose, .success-badge, .metric-card, .feature-card, .footer, .about-section, .action-bar, .flowchart-container {
+      color: #1e293b;
+    }
+    
+    input, select, textarea {
+      color: #1e293b;
+      background-color: #fff;
+    }
+    
+    .btn-primary svg, .btn-secondary svg {
+      color: var(--primary-blue);
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <header>
-      <div class="logo">EchoMap</div>
+<body class="bg-gray-50 min-h-screen">
+  <div class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+    <!-- Header Section -->
+    <header class="flex items-center justify-between py-4 border-b border-gray-200 mb-8">
+      <div class="flex items-center space-x-4">
+        <div class="logo-container">
+          <div class="logo-circle">
+            <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+          </div>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">EchoMap</h1>
+          <p class="text-sm text-gray-600">Where Conversations Become Clarity</p>
+        </div>
+      </div>
+      <nav class="flex items-center space-x-6">
+        <a href="#about" class="text-gray-600 hover:text-primary-blue">About</a>
+        <a href="https://github.com/yourusername/echomap" target="_blank" class="text-gray-500 hover:text-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+          </svg>
+        </a>
+      </nav>
     </header>
 
-    <h1>Upload IVR Recording</h1>
-    <p>Upload an audio recording of an IVR system to generate a transcript and visual flowchart.</p>
-
-    {% if error %}
-    <div class="error-message">
-      {{ error }}
-    </div>
-    {% endif %}
-
-    <div class="upload-form">
-      <form id="uploadForm" method="POST" enctype="multipart/form-data">
-        <div class="file-input-wrapper">
-          <input type="file" name="file" id="fileInput" class="file-input" accept=".mp3,.wav,.ogg,.m4a" required />
+    <!-- About Section -->
+    <section id="about" class="mb-12">
+      <h2 class="text-2xl font-bold text-gray-900 mb-6">Why Choose EchoMap?</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="feature-card">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary-blue mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <h3 class="text-lg font-semibold mb-2">Lightning Fast</h3>
+          <p class="text-gray-600">Process your IVR recordings in seconds with our advanced AI technology.</p>
         </div>
-        <div class="file-info">
-          Supported formats: MP3, WAV, OGG, M4A (Max size: 16MB)
+        <div class="feature-card">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary-blue mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <h3 class="text-lg font-semibold mb-2">Accurate Results</h3>
+          <p class="text-gray-600">Get precise transcriptions and clear flowcharts every time.</p>
         </div>
-        <button type="submit" id="submitBtn">Upload & Transcribe</button>
-      </form>
-
-      <div id="loading" class="loading">
-        <div class="loading-spinner"></div>
-        <p>Processing your audio file... This may take a minute.</p>
+        <div class="feature-card">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary-blue mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <h3 class="text-lg font-semibold mb-2">Easy Export</h3>
+          <p class="text-gray-600">Download your flowcharts in SVG format for easy sharing and editing.</p>
+        </div>
       </div>
-    </div>
+    </section>
 
-    {% if transcript %}
-    <div class="transcript">
-      <h2>Transcript</h2>
-      <p>{{ transcript }}</p>
-    </div>
-    {% endif %}
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-lg shadow-lg p-8">
+        <!-- Call Section -->
+        <div class="mb-8">
+          <h2 class="text-2xl font-semibold mb-4">Make a Call</h2>
+          <div class="flex flex-col space-y-4">
+            <div>
+              <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <input type="tel" id="phone_number" name="phone_number" 
+                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     placeholder="+1234567890" required>
+            </div>
+            <button id="makeCallBtn" 
+                    class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+              Start Call
+            </button>
+          </div>
+          <div id="callStatus" class="mt-4 hidden">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-3"></div>
+                <span class="text-gray-700">Call in progress...</span>
+              </div>
+              <span class="text-sm text-gray-500" id="callTimer">00:00</span>
+            </div>
+          </div>
+        </div>
 
-    {% if flowchart %}
-    <div class="flowchart">
-      <h2>Call Flowchart</h2>
-      <div class="mermaid">
-        {{ flowchart }}
+        <div class="drop-zone" id="dropZone">
+          <div class="text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-primary-blue mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <h2 class="text-xl font-semibold mb-2">Drop your IVR recording here</h2>
+            <p class="text-gray-600 mb-4">or</p>
+            <label class="btn-primary">
+              Choose File
+              <input type="file" id="fileInput" accept="audio/*" class="hidden">
+            </label>
+            <p class="text-sm text-gray-500 mt-2">Supported formats: MP3, WAV, M4A</p>
+          </div>
+        </div>
+
+        <div id="loadingSpinner" class="hidden">
+          <div class="flex flex-col items-center justify-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-blue mb-4"></div>
+            <p class="text-gray-600">Processing your recording...</p>
+          </div>
+        </div>
+
+        <div id="resultContainer" class="hidden">
+          <div class="mb-8">
+            <h3 class="text-lg font-semibold mb-4">Transcription</h3>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <p id="transcription" class="text-gray-700"></p>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-lg font-semibold">Flowchart</h3>
+              <button id="downloadBtn" class="btn-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download SVG
+              </button>
+            </div>
+            <div id="flowchart" class="bg-white rounded-lg border border-gray-200 p-4"></div>
+          </div>
+        </div>
       </div>
-    </div>
-    {% endif %}
+    </main>
 
-    <div class="footer">
-      &copy; 2025 EchoMap - IVR Transcription & Visualization Tool
+    <!-- Footer -->
+    <footer class="mt-12 py-8 border-t border-gray-200">
+      <div class="max-w-4xl mx-auto text-center">
+        <p class="text-gray-600">© 2024 EchoMap. All rights reserved.</p>
+        <div class="mt-4 space-x-4">
+          <a href="#about" class="text-gray-500 hover:text-primary-blue">About</a>
+          <a href="#" class="text-gray-500 hover:text-primary-blue">Privacy</a>
+          <a href="#" class="text-gray-500 hover:text-primary-blue">Terms</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Flowchart Modal -->
+  <div id="flowchartModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="text-xl font-semibold text-gray-900">IVR Flowchart (Enlarged View)</h2>
+        <span class="close">&times;</span>
+      </div>
+      <div class="bg-white p-4 rounded-lg">
+        <div id="modal-flowchart" class="mermaid"></div>
+      </div>
+      <div class="mt-6 flex justify-end">
+        <button id="modalDownloadSVG" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download SVG
+        </button>
+      </div>
     </div>
   </div>
 
-  <script>
-    // Show loading indicator when form is submitted
-    document.getElementById('uploadForm').addEventListener('submit', function() {
-      document.getElementById('submitBtn').disabled = true;
-      document.getElementById('loading').style.display = 'block';
-    });
+  <!-- Call Status Modal -->
+  <div id="callStatusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6">
+            <h3 class="text-xl font-semibold mb-4">Call Status</h3>
+            <div id="modalContent" class="mb-4">
+                <!-- Content will be dynamically updated -->
+            </div>
+            <div id="dtmfSequence" class="mb-4">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">DTMF Sequence:</h4>
+                <div class="flex flex-wrap gap-2" id="dtmfButtons">
+                    <!-- DTMF buttons will be added here -->
+                </div>
+            </div>
+            <div id="transcriptContainer" class="mb-4">
+                <h4 class="text-sm font-medium text-gray-700 mb-2">Live Transcript:</h4>
+                <div class="bg-gray-50 rounded p-3 max-h-40 overflow-y-auto">
+                    <p id="liveTranscript" class="text-sm text-gray-600"></p>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button onclick="closeCallStatusModal()" 
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+  </div>
 
-    // File size validation
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-      const fileSize = this.files[0]?.size / 1024 / 1024; // size in MB
-      if (fileSize > 16) {
-        alert('File is too large! Maximum size is 16MB.');
-        this.value = ''; // Clear the file input
+  <!-- JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+      const loading = document.getElementById('loadingSpinner');
+      const resultContainer = document.getElementById('resultContainer');
+      
+      // Handle file browsing
+      if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+          handleFiles(e.target.files);
+        });
+      }
+      
+      // Handle drag and drop
+      if (dropZone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+          dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+          dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+          dropZone.classList.add('dragover');
+        }
+        
+        function unhighlight() {
+          dropZone.classList.remove('dragover');
+        }
+        
+        dropZone.addEventListener('drop', (e) => {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          handleFiles(files);
+        });
+      }
+      
+      // Process selected files
+      function handleFiles(files) {
+        if (files.length > 0) {
+          const file = files[0];
+          
+          // Validate file type
+          const validTypes = ['.mp3', '.wav', '.ogg', '.m4a'];
+          const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+          if (!validTypes.includes(fileExtension)) {
+            alert('Invalid file type. Please upload MP3, WAV, OGG, or M4A files.');
+            return;
+          }
+          
+          // Validate file size (16MB)
+          if (file.size > 16 * 1024 * 1024) {
+            alert('File too large. Maximum size is 16MB.');
+            return;
+          }
+          
+          // Show loading spinner
+          loading.classList.remove('hidden');
+          resultContainer.classList.add('hidden');
+          
+          // Create and submit form
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          fetch('/', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json'
+            },
+            body: formData
+          })
+          .then(response => {
+            if (!response.ok) {
+              // Try to parse error as JSON, fallback to text
+              return response.text().then(text => {
+                try {
+                  const err = JSON.parse(text);
+                  throw new Error(err.error || text);
+                } catch (e) {
+                  throw new Error(text);
+                }
+              });
+            }
+            return response.json();
+          })
+          .then(data => {
+            // Hide loading spinner
+            loading.classList.add('hidden');
+            
+            // Redirect to insights page with the data
+            const params = new URLSearchParams({
+              transcript: data.transcript,
+              flowchart: data.flowchart
+            });
+            window.location.href = `/insights?${params.toString()}`;
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            loading.classList.add('hidden');
+            alert(error.message || 'An error occurred while processing your file. Please try again.');
+          });
+        }
       }
     });
+  </script>
+  
+  <!-- Add keyboard shortcuts -->
+  <script>
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        const modal = document.getElementById('flowchartModal');
+        if (modal && modal.style.display === 'block') {
+          modal.style.display = 'none';
+        }
+      }
+    });
+  </script>
+
+  <script>
+    // Add these functions to your existing JavaScript
+    function updateDTMFSequence(digits) {
+        const dtmfButtons = document.getElementById('dtmfButtons');
+        const button = document.createElement('div');
+        button.className = 'px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium';
+        button.textContent = digits;
+        dtmfButtons.appendChild(button);
+    }
+
+    function updateLiveTranscript(text) {
+        const transcript = document.getElementById('liveTranscript');
+        transcript.textContent = text;
+        transcript.scrollTop = transcript.scrollHeight;
+    }
+
+    // Update the showCallStatusModal function
+    function showCallStatusModal(message, dtmf = null, transcript = null) {
+        const modal = document.getElementById('callStatusModal');
+        const content = document.getElementById('modalContent');
+        content.textContent = message;
+        modal.style.display = 'block';
+        
+        if (dtmf) {
+            updateDTMFSequence(dtmf);
+        }
+        
+        if (transcript) {
+            updateLiveTranscript(transcript);
+        }
+    }
   </script>
 </body>
 </html>
